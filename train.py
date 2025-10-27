@@ -7,6 +7,9 @@ from pathlib import Path
 import numpy as np
 import polars as pl
 from sklearn.preprocessing import StandardScaler
+import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
+from datetime import datetime
 
 # Add src to path
 sys.path.append(str(Path(__file__).parent))
@@ -205,7 +208,89 @@ def main():
     return results, all_signals, test_df
 
 
+def plot_training_results(all_signals: dict, test_df: pl.DataFrame, save_dir: Path = Path('artifacts')):
+    """Plot training results using matplotlib."""
+    save_dir.mkdir(exist_ok=True)
+    
+    # Plot 1: Prediction comparison
+    fig, axes = plt.subplots(2, 2, figsize=(15, 10))
+    axes = axes.flatten()
+    
+    for idx, (model_name, signals) in enumerate(all_signals.items()):
+        if idx < 4:
+            ax = axes[idx]
+            ax.plot(signals, marker='o', linestyle='-', markersize=6, linewidth=2)
+            ax.set_title(f'{model_name} Predictions', fontsize=14, fontweight='bold')
+            ax.set_xlabel('Sample Index', fontsize=12)
+            ax.set_ylabel('Signal Value', fontsize=12)
+            ax.grid(True, alpha=0.3)
+            ax.axhline(y=1.0, color='r', linestyle='--', alpha=0.5, label='Neutral')
+            ax.legend()
+    
+    plt.tight_layout()
+    plt.savefig(save_dir / 'predictions_comparison.png', dpi=300, bbox_inches='tight')
+    print(f"\n✅ Saved predictions plot to {save_dir / 'predictions_comparison.png'}")
+    plt.close()
+    
+    # Plot 2: Signal distribution
+    fig, ax = plt.subplots(figsize=(12, 6))
+    
+    x_pos = np.arange(len(all_signals))
+    widths = 0.8 / len(all_signals)
+    
+    for idx, (model_name, signals) in enumerate(all_signals.items()):
+        ax.hist(signals, bins=20, alpha=0.6, label=model_name, 
+                density=True, edgecolor='black', linewidth=0.5)
+    
+    ax.set_xlabel('Signal Value', fontsize=12)
+    ax.set_ylabel('Density', fontsize=12)
+    ax.set_title('Signal Distribution by Model', fontsize=14, fontweight='bold')
+    ax.legend()
+    ax.grid(True, alpha=0.3, axis='y')
+    
+    plt.tight_layout()
+    plt.savefig(save_dir / 'signal_distribution.png', dpi=300, bbox_inches='tight')
+    print(f"✅ Saved distribution plot to {save_dir / 'signal_distribution.png'}")
+    plt.close()
+    
+    # Plot 3: Summary statistics bar chart
+    fig, ax = plt.subplots(figsize=(12, 6))
+    
+    models = list(all_signals.keys())
+    means = [np.mean(all_signals[m]) for m in models]
+    stds = [np.std(all_signals[m]) for m in models]
+    mins = [np.min(all_signals[m]) for m in models]
+    maxs = [np.max(all_signals[m]) for m in models]
+    
+    x = np.arange(len(models))
+    width = 0.2
+    
+    ax.bar(x - 1.5*width, means, width, label='Mean', alpha=0.8)
+    ax.bar(x - 0.5*width, stds, width, label='Std', alpha=0.8)
+    ax.bar(x + 0.5*width, mins, width, label='Min', alpha=0.8)
+    ax.bar(x + 1.5*width, maxs, width, label='Max', alpha=0.8)
+    
+    ax.set_ylabel('Signal Value', fontsize=12)
+    ax.set_title('Model Signal Statistics', fontsize=14, fontweight='bold')
+    ax.set_xticks(x)
+    ax.set_xticklabels(models, rotation=45, ha='right')
+    ax.legend()
+    ax.grid(True, alpha=0.3, axis='y')
+    
+    plt.tight_layout()
+    plt.savefig(save_dir / 'signal_statistics.png', dpi=300, bbox_inches='tight')
+    print(f"✅ Saved statistics plot to {save_dir / 'signal_statistics.png'}")
+    plt.close()
+
+
 if __name__ == "__main__":
     results, signals, test_data = main()
+    
+    # Plot results
+    print("\n" + "="*70)
+    print("Generating Visualizations")
+    print("="*70)
+    plot_training_results(signals, test_data)
+    
     print("\nTraining completed successfully!")
 
