@@ -35,7 +35,7 @@ ENV/
 
 # Jupyter Notebook
 .ipynb_checkpoints/
-# notebooks/analysis.ipynb  # Allow this notebook
+*.ipynb
 
 # Project specific
 *.csv
