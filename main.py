@@ -123,9 +123,29 @@ def create_example_dataset(df: pl.DataFrame) -> pl.DataFrame:
         pl.DataFrame: The DataFrame with new features, selected columns, and no null values.
     """
     vars_to_keep: List[str] = [
-        "S2", "E2", "E3", "P9", "S1", "S5", "I2", "P8",
-        "P10", "P12", "P13", "U1", "U2"
+        # D Columns
+        "D1", "D2", "D3", "D4", "D5", "D6", "D7", "D8", "D9",
+        # E Columns
+        "E1", "E2", "E3", "E4", "E5", "E6", "E7", "E8", "E9", "E10", "E11", "E12",
+        "E13", "E14", "E15", "E16", "E17", "E18", "E19", "E20",
+        # I Columns
+        "I1", "I2", "I3", "I4", "I5", "I6", "I7", "I8", "I9",
+        # M Columns
+        "M1", "M2", "M3", "M4", "M5", "M6", "M7", "M8", "M9", "M10", "M11", "M12",
+        "M13", "M14", "M15", "M16", "M17", "M18",
+        # P Columns
+        "P1", "P2", "P3", "P4", "P5", "P6", "P7", "P8", "P9", "P10", "P11", "P12", "P13",
+        # S Columns
+        "S1", "S2", "S3", "S4", "S5", "S6", "S7", "S8", "S9", "S10", "S11", "S12",
+        # V Columns
+        "V1", "V2", "V3", "V4", "V5", "V6", "V7", "V8", "V9", "V10", "V11", "V12", "V13",
+        # Derived features
+        "U1", "U2"
     ]
+    
+    # Only keep columns that actually exist in the dataframe
+    available_cols = df.columns
+    vars_to_keep = [col for col in vars_to_keep if col in available_cols]
 
     return (
         df.with_columns(
@@ -167,9 +187,9 @@ def split_dataset(train: pl.DataFrame, test: pl.DataFrame, features: list[str]) 
     Returns:
         DatasetOutput: A dataclass containing the scaled feature sets, target series, and the fitted scaler.
     """
-    X_train = train.drop(['date_id','target']) 
+    X_train = train.select(features)
     y_train = train.get_column('target')
-    X_test = test.drop(['date_id','target']) 
+    X_test = test.select(features)
     y_test = test.get_column('target')
     
     scaler = StandardScaler() 
@@ -208,6 +228,78 @@ def convert_ret_to_signal(
         ret_arr * params.signal_multiplier + 1, params.min_signal, params.max_signal
     )
 
+def calculate_adjusted_sharpe(
+    position: np.ndarray,
+    forward_returns: np.ndarray,
+    risk_free_rate: np.ndarray,
+    min_investment: float = 0.0,
+    max_investment: float = 2.0,
+    trading_days_per_yr: int = 252
+) -> float:
+    """
+    Calculates a custom evaluation metric (volatility-adjusted Sharpe ratio).
+
+    This metric penalizes strategies that take on significantly more volatility
+    than the underlying market.
+
+    Args:
+        position: The predicted position/signal (0 to 2).
+        forward_returns: Forward returns of the market.
+        risk_free_rate: Risk-free rate.
+        min_investment: Minimum allowed position (default 0.0).
+        max_investment: Maximum allowed position (default 2.0).
+        trading_days_per_yr: Trading days per year (default 252).
+
+    Returns:
+        float: The calculated adjusted Sharpe ratio.
+    """
+    # Validate position range
+    if position.max() > max_investment:
+        raise ValueError(f'Position of {position.max()} exceeds maximum of {max_investment}')
+    if position.min() < min_investment:
+        raise ValueError(f'Position of {position.min()} below minimum of {min_investment}')
+    
+    # Calculate strategy returns
+    strategy_returns = risk_free_rate * (1 - position) + position * forward_returns
+    
+    # Calculate strategy's Sharpe ratio
+    strategy_excess_returns = strategy_returns - risk_free_rate
+    strategy_excess_cumulative = (1 + strategy_excess_returns).prod()
+    strategy_mean_excess_return = (strategy_excess_cumulative) ** (1 / len(forward_returns)) - 1
+    strategy_std = strategy_returns.std()
+    
+    if strategy_std == 0:
+        raise ValueError('Division by zero, strategy std is zero')
+    
+    sharpe = strategy_mean_excess_return / strategy_std * np.sqrt(trading_days_per_yr)
+    strategy_volatility = float(strategy_std * np.sqrt(trading_days_per_yr) * 100)
+    
+    # Calculate market return and volatility
+    market_excess_returns = forward_returns - risk_free_rate
+    market_excess_cumulative = (1 + market_excess_returns).prod()
+    market_mean_excess_return = (market_excess_cumulative) ** (1 / len(forward_returns)) - 1
+    market_std = forward_returns.std()
+    
+    market_volatility = float(market_std * np.sqrt(trading_days_per_yr) * 100)
+    
+    if market_volatility == 0:
+        raise ValueError('Division by zero, market std is zero')
+    
+    # Calculate the volatility penalty
+    excess_vol = max(0, strategy_volatility / market_volatility - 1.2) if market_volatility > 0 else 0
+    vol_penalty = 1 + excess_vol
+    
+    # Calculate the return penalty
+    return_gap = max(
+        0,
+        (market_mean_excess_return - strategy_mean_excess_return) * 100 * trading_days_per_yr,
+    )
+    return_penalty = 1 + (return_gap**2) / 100
+    
+    # Adjust the Sharpe ratio by the volatility and return penalty
+    adjusted_sharpe = sharpe / (vol_penalty * return_penalty)
+    return min(float(adjusted_sharpe), 1_000_000)
+
 def main():
     """Main function to run the Hull Tactical Market Prediction model."""
     print("Starting Hull Tactical Market Prediction...")
@@ -220,6 +312,9 @@ def main():
     print(train.tail(3)) 
     print(test.head(3))
 
+    # Store financial columns from training data before joining
+    train_financial = train.select(['date_id', 'forward_returns', 'risk_free_rate'])
+    
     # Generating the Train and Test
     df: pl.DataFrame = join_train_test_dataframes(train, test)
     df = create_example_dataset(df=df) 
@@ -227,8 +322,13 @@ def main():
     test_date_ids = test.get_column('date_id')
     train: pl.DataFrame = df.filter(pl.col('date_id').is_in(train_date_ids.to_list()))
     test: pl.DataFrame = df.filter(pl.col('date_id').is_in(test_date_ids.to_list()))
+    
+    # Join financial columns back to train
+    train = train.join(train_financial, on='date_id', how='left')
 
-    FEATURES: list[str] = [col for col in test.columns if col not in ['date_id', 'target']]
+    # Exclude financial columns from features to avoid data leakage
+    excluded_cols = ['date_id', 'target', 'forward_returns', 'risk_free_rate']
+    FEATURES: list[str] = [col for col in test.columns if col not in excluded_cols]
     print(f"Features used: {FEATURES}")
 
     dataset: DatasetOutput = split_dataset(train=train, test=test, features=FEATURES) 
@@ -260,6 +360,31 @@ def main():
     print(f"Predictions shape: {predictions.shape}")
     print(f"Signals shape: {signals.shape}")
     print(f"Signal range: [{signals.min():.4f}, {signals.max():.4f}]")
+    
+    # Calculate the adjusted Sharpe ratio score on training data (validation)
+    if 'forward_returns' in train.columns and 'risk_free_rate' in train.columns:
+        # Use the last portion of training data as validation
+        val_size = min(1000, len(train))
+        val_train = train.tail(val_size)
+        val_X = val_train.select(FEATURES)
+        val_X_scaled_np = scaler.transform(val_X)
+        val_X_scaled = pl.from_numpy(val_X_scaled_np, schema=FEATURES)
+        
+        val_predictions = model.predict(val_X_scaled)
+        val_signals = convert_ret_to_signal(val_predictions, ret_signal_params)
+        
+        forward_returns = val_train.get_column('forward_returns').to_numpy()
+        risk_free_rate = val_train.get_column('risk_free_rate').to_numpy()
+        
+        try:
+            adjusted_sharpe = calculate_adjusted_sharpe(
+                position=val_signals,
+                forward_returns=forward_returns,
+                risk_free_rate=risk_free_rate
+            )
+            print(f"\nValidation Adjusted Sharpe Ratio: {adjusted_sharpe:.4f}")
+        except Exception as e:
+            print(f"\nError calculating validation score: {e}")
     
     return model, predictions, signals, test
 
