@@ -6,7 +6,7 @@ from sklearn.preprocessing import StandardScaler
 import numpy as np
 from dataclasses import dataclass
 
-from src.config import DATA_PATH
+DATA_PATH = Path('/Users/sudip/hull_tactical_market_prediction_using_hyperopt/input/hull-tactical-market-prediction/')
 
 TRAIN_FILE = DATA_PATH / 'train.csv'
 TEST_FILE = DATA_PATH / 'test.csv'

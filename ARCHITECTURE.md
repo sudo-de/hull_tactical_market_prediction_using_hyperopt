@@ -115,46 +115,46 @@
          │
          ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                    MODEL EVALUATION LAYER                        │
-│  ┌─────────────────────────────────────────────────────────┐   │
-│  │  compare_models.py                                     │   │
-│  │  ─────────────────────────────────────                 │   │
-│  │                                                          │   │
-│  │  • calculate_metrics()                                 │   │
-│  │    - RMSE (Root Mean Squared Error)                    │   │
-│  │    - MAE (Mean Absolute Error)                         │   │
-│  │    - R² Score                                           │   │
-│  │                                                          │   │
-│  │  • plot_predictions()                                   │   │
-│  │    - Visualization of predictions                      │   │
-│  │                                                          │   │
-│  │  • plot_feature_importance()                            │   │
-│  │    - Top N features visualization                      │   │
-│  │                                                          │   │
-│  │  • evaluate_model()                                    │   │
-│  │    - Signal conversion                                 │   │
-│  │    - Range validation                                  │   │
-│  └─────────────────────────────────────────────────────────┘   │
+│                    MODEL EVALUATION LAYER                       │
+│  ┌─────────────────────────────────────────────────────────┐    │
+│  │  compare_models.py                                      │    │
+│  │  ─────────────────────────────────────                  │    │
+│  │                                                         │    │
+│  │  • calculate_metrics()                                  │    │
+│  │    - RMSE (Root Mean Squared Error)                     │    │
+│  │    - MAE (Mean Absolute Error)                          │    │
+│  │    - R² Score                                           │    │
+│  │                                                         │    │
+│  │  • plot_predictions()                                   │    │
+│  │    - Visualization of predictions                       │    │
+│  │                                                         │    │
+│  │  • plot_feature_importance()                            │    │
+│  │    - Top N features visualization                       │    │
+│  │                                                         │    │
+│  │  • evaluate_model()                                     │    │
+│  │    - Signal conversion                                  │    │
+│  │    - Range validation                                   │    │
+│  └─────────────────────────────────────────────────────────┘    │
 └────────┬────────────────────────────────────────────────────────┘
          │
          ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                     PREDICTION & OUTPUT                           │
-│  ┌─────────────────────────────────────────────────────────┐   │
-│  │  convert_ret_to_signal()                               │   │
-│  │  ─────────────────────────────────────                │   │
-│  │                                                          │   │
-│  │  • Input: Raw predictions (returns)                   │   │
-│  │  • Process:                                             │   │
-│  │    - Multiply by SIGNAL_MULTIPLIER (400)               │   │
-│  │    - Add 1.0                                            │   │
-│  │    - Clip to [0.0, 2.0] range                          │   │
-│  │  • Output: Trading signals                             │   │
-│  │                                                          │   │
-│  │  • Competition scoring:                                 │   │
-│  │    - evaluation.py                                      │   │
-│  │    - Volatility-adjusted Sharpe ratio                  │   │
-│  └─────────────────────────────────────────────────────────┘   │
+│                     PREDICTION & OUTPUT                         │
+│  ┌─────────────────────────────────────────────────────────┐    │
+│  │  convert_ret_to_signal()                                │    │
+│  │  ─────────────────────────────────────                  │    │
+│  │                                                         │    │
+│  │  • Input: Raw predictions (returns)                     │    │
+│  │  • Process:                                             │    │
+│  │    - Multiply by SIGNAL_MULTIPLIER (400)                │    │
+│  │    - Add 1.0                                            │    │
+│  │    - Clip to [0.0, 2.0] range                           │    │
+│  │  • Output: Trading signals                              │    │
+│  │                                                         │    │
+│  │  • Competition scoring:                                 │    │
+│  │    - evaluation.py                                      │    │
+│  │    - Volatility-adjusted Sharpe ratio                   │    │
+│  └─────────────────────────────────────────────────────────┘    │
 └─────────────────────────────────────────────────────────────────┘
 ```
 

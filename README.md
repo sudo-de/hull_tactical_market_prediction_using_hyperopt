@@ -10,116 +10,122 @@ This project implements an advanced market timing model inspired by Hull Tactica
 - **Model Comparison Framework**: Systematic evaluation and visualization of model performance
 - **Competition-Ready**: Includes evaluation scoring function for Hull Tactical Market Prediction competition
 
-## Setup
+## Quick Start
 
-### 1. Create a Virtual Environment
+### 1. Setup
 
 ```bash
+# Clone the repository
+git clone https://github.com/sudo-de/hull_tactical_market_prediction_using_hyperopt.git
+cd hull_tactical_market_prediction_using_hyperopt
+
+# Create virtual environment
 python3 -m venv venv
-```
+source venv/bin/activate  # On macOS/Linux
+# OR
+venv\Scripts\activate     # On Windows
 
-### 2. Activate the Virtual Environment
-
-**On macOS/Linux:**
-```bash
-source venv/bin/activate
-```
-
-**On Windows:**
-```bash
-venv\Scripts\activate
-```
-
-### 3. Install Dependencies
-
-```bash
+# Install dependencies
 pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-## Usage
-
-### Running the Main Script
+### 2. Run Training
 
 ```bash
-# Make sure venv is activated
+# Activate environment
 source venv/bin/activate
 
-# Run the main script
+# Run advanced training with all models
+python train.py
+
+# OR run basic version
 python main.py
 ```
 
-### Training the Model
-
-```bash
-python train.py
-```
-
-### Comparing Models
+### 3. Compare Models
 
 ```bash
 python compare_models.py
 ```
 
-### Creating Submissions
-
-```bash
-python create_submission.py
-```
-
 ## Project Structure
 
 ```
-├── main.py                    # Main ElasticNet model implementation
-├── evaluation.py              # Competition scoring function
-├── train.py                   # Training script
-├── compare_models.py          # Model comparison
-├── create_submission.py       # Submission file generation
 ├── src/
-│   ├── config.py             # Configuration settings
-│   ├── data.py               # Data loading utilities
-│   ├── features.py            # Feature engineering
-│   └── models/                # Model implementations
-│       ├── elastic_net.py     # ElasticNet model
-│       ├── xgboost_model.py   # XGBoost model
-│       ├── lightgbm_model.py # LightGBM model
-│       └── ensemble.py        # Ensemble models
-├── input/                     # Input data directory
-├── artifacts/                 # Saved models and results
-├── experiments/               # Experiment tracking
-└── notebooks/                 # Jupyter notebooks
-
+│   ├── features.py              # Advanced feature engineering
+│   ├── data.py                  # Data loading utilities
+│   └── models/                  # Model implementations
+│       ├── elastic_net.py       # ElasticNet with Optuna
+│       ├── lightgbm_model.py    # LightGBM with Optuna
+│       ├── xgboost_model.py     # XGBoost with Optuna
+│       └── ensemble.py          # Ensemble methods
+├── input/                       # Data directory
+├── artifacts/                   # Model outputs and plots
+├── train.py                     # Main training script
+├── main.py                      # Basic implementation
+├── compare_models.py            # Model comparison
+├── evaluation.py                # Competition scoring
+├── requirements.txt             # Dependencies
+├── README.md                    # This file
+├── ARCHITECTURE.md              # System architecture
+├── FEATURES.md                  # Feature engineering details
+├── TRAINING_RESULTS.md          # Training results
+└── QUICK_START.md               # Quick start guide
 ```
 
-## Features
+## Models
 
-- **ElasticNet Model**: Regularized regression with L1 and L2 penalties
-- **XGBoost Model**: Gradient boosting for improved predictions
-- **LightGBM Model**: Fast gradient boosting framework
-- **Ensemble Methods**: Combining multiple models for better performance
-- **Hyperparameter Optimization**: Using Hyperopt for optimal parameter tuning
-- **Evaluation**: Custom Sharpe ratio-based scoring function
+### 1. ElasticNet
+- Regularized linear regression with L1 and L2 penalties
+- Fast training, interpretable results
+- CV Score: 0.010908 RMSE
+
+### 2. LightGBM (Best Performer)
+- Fast gradient boosting with leaf-wise tree growth
+- Excellent for large feature sets
+- CV Score: **0.009635 RMSE**
+
+### 3. XGBoost
+- Advanced gradient boosting framework
+- Robust to missing values
+- CV Score: 0.009800 RMSE
+
+### 4. Ensemble
+- Weighted voting of all models
+- Most robust predictions
+- Combines strengths of all algorithms
+
+## Feature Engineering
+
+- **13 basic features** → **88 engineered features**
+- Lag features (1-5 day lags)
+- Rolling statistics (mean, std, min, max)
+- Momentum indicators
+- Interaction features
+- Volatility features
 
 ## Model Configuration
 
-### ElasticNet Parameters
-- `CV`: Number of cross-validation folds (default: 10)
-- `L1_RATIO`: ElasticNet mixing parameter (default: 0.5)
-- `ALPHAS`: Regularization constants (logspace from -4 to 2)
-- `MAX_ITER`: Maximum iterations (default: 1,000,000)
+### Hyperparameters (Optuna-optimized)
 
-### Signal Parameters
-- `MIN_SIGNAL`: Minimum signal value (default: 0.0)
-- `MAX_SIGNAL`: Maximum signal value (default: 2.0)
-- `SIGNAL_MULTIPLIER`: Multiplier for predictions (default: 400.0)
+**ElasticNet:**
+- CV folds: 5
+- Trials: 20
+- Alpha: [1e-4, 1.0]
+- L1_ratio: [0.0, 1.0]
 
-## Evaluation
+**LightGBM:**
+- CV folds: 5
+- Trials: 20
+- 8 hyperparameters optimized
+- Best: num_leaves=290, lr=0.069
 
-The competition uses a volatility-adjusted Sharpe ratio that penalizes strategies with:
-- Significantly higher volatility than the market
-- Returns that fail to outperform the market
-
-The scoring function is implemented in `evaluation.py`.
+**XGBoost:**
+- CV folds: 5
+- Trials: 20
+- 9 hyperparameters optimized
+- Best: max_depth=4, lr=0.062
 
 ## Training Results
 
@@ -144,6 +150,34 @@ python train.py
 - Signal ranges and statistics
 - Best hyperparameters for each model
 
+## Documentation
+
+- **[ARCHITECTURE.md](ARCHITECTURE.md)** - Complete system architecture and design
+- **[FEATURES.md](FEATURES.md)** - Advanced feature engineering details
+- **[TRAINING_RESULTS.md](TRAINING_RESULTS.md)** - Detailed training results and metrics
+- **[QUICK_START.md](QUICK_START.md)** - Quick start guide
+
+## Evaluation
+
+The competition uses a volatility-adjusted Sharpe ratio that penalizes strategies with:
+- Significantly higher volatility than the market
+- Returns that fail to outperform the market
+
+The scoring function is implemented in `evaluation.py`.
+
+## Requirements
+
+- Python 3.8+
+- See `requirements.txt` for full dependency list
+
 ## License
 
 See LICENSE file for details.
+
+## Repository
+
+🔗 **GitHub**: https://github.com/sudo-de/hull_tactical_market_prediction_using_hyperopt
+
+## Contributing
+
+Feel free to submit issues and enhancement requests!
