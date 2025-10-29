@@ -34,6 +34,7 @@ class ElasticNetModel:
         self.model = None
         self.best_params = None
         self.best_score = None
+        self.training_metrics = None
         
     def objective(self, trial, X: np.ndarray, y: np.ndarray) -> float:
         """
@@ -91,14 +92,46 @@ class ElasticNetModel:
         else:
             self.best_params = {'alpha': 0.1, 'l1_ratio': 0.5}
         
-        # Train final model
+        # Split data for train/val tracking
+        from sklearn.model_selection import train_test_split
+        X_train, X_val, y_train, y_val = train_test_split(
+            X, y, test_size=0.2, random_state=self.random_state, shuffle=False
+        )
+        
+        print(f"Loss function: Squared Error (MSE)")
+        print(f"Training ElasticNet model...")
+        
+        # Train model
         self.model = ElasticNet(
             alpha=self.best_params['alpha'],
             l1_ratio=self.best_params['l1_ratio'],
             max_iter=self.max_iter,
             random_state=self.random_state
         )
+        self.model.fit(X_train, y_train)
+        
+        # Calculate metrics
+        from sklearn.metrics import mean_squared_error
+        train_pred = self.model.predict(X_train)
+        val_pred = self.model.predict(X_val)
+        
+        train_rmse = np.sqrt(mean_squared_error(y_train, train_pred))
+        val_rmse = np.sqrt(mean_squared_error(y_val, val_pred))
+        
+        print(f"\n📊 ElasticNet Training Metrics:")
+        print(f"   Training RMSE: {train_rmse:.6f}")
+        print(f"   Validation RMSE: {val_rmse:.6f}")
+        print(f"   Iterations: {self.model.n_iter_} (max allowed: {self.max_iter})")
+        
+        # Retrain on full dataset
         self.model.fit(X, y)
+        
+        self.training_metrics = {
+            'loss_function': 'Squared Error (MSE)',
+            'iterations': self.model.n_iter_,
+            'train_rmse': train_rmse,
+            'val_rmse': val_rmse
+        }
     
     def predict(self, X: np.ndarray) -> np.ndarray:
         """

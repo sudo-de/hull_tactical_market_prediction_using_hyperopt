@@ -35,6 +35,7 @@ class LightGBMModel:
         self.model = None
         self.best_params = None
         self.best_score = None
+        self.training_metrics = None
         
     def objective(self, trial, X: np.ndarray, y: np.ndarray) -> float:
         """
@@ -131,14 +132,82 @@ class LightGBMModel:
             'verbose': -1,
         })
         
-        # Train final model
-        train_data = lgb.Dataset(X, label=y, params=self.best_params)
+        # Split data for train/val tracking
+        from sklearn.model_selection import train_test_split
+        X_train, X_val, y_train, y_val = train_test_split(
+            X, y, test_size=0.2, random_state=self.random_state, shuffle=False
+        )
+        
+        print(f"Loss function: Regression (RMSE)")
+        print(f"Training with up to 1000 boosting rounds...")
+        
+        # Train with validation set to track metrics
+        train_data = lgb.Dataset(X_train, label=y_train)
+        val_data = lgb.Dataset(X_val, label=y_val, reference=train_data)
+        
+        # Track training history
+        train_losses = []
+        val_losses = []
+        
+        def callback(env):
+            # Extract RMSE from evaluation results
+            # evaluation_result_list format: [('train', 'rmse', value), ('eval', 'rmse', value)]
+            if env.evaluation_result_list:
+                # Training metric
+                if len(env.evaluation_result_list) > 0:
+                    train_losses.append(env.evaluation_result_list[0][2])
+                # Validation metric
+                if len(env.evaluation_result_list) > 1:
+                    val_losses.append(env.evaluation_result_list[1][2])
+        
         self.model = lgb.train(
             self.best_params,
             train_data,
             num_boost_round=1000,
-            callbacks=[]  # No callbacks needed for final training
+            valid_sets=[train_data, val_data],
+            valid_names=['train', 'eval'],
+            callbacks=[
+                lgb.early_stopping(stopping_rounds=50),
+                lgb.log_evaluation(100),
+                callback
+            ]
         )
+        
+        # Calculate metrics
+        if train_losses and val_losses:
+            print(f"\n📊 LightGBM Training Metrics:")
+            print(f"   Final Training RMSE: {train_losses[-1]:.6f}")
+            print(f"   Final Validation RMSE: {val_losses[-1]:.6f}")
+            print(f"   Best Training RMSE: {min(train_losses):.6f} (round {train_losses.index(min(train_losses))})")
+            print(f"   Best Validation RMSE: {min(val_losses):.6f} (round {val_losses.index(min(val_losses))})")
+            print(f"   Worst Training RMSE: {max(train_losses):.6f} (round {train_losses.index(max(train_losses))})")
+            print(f"   Worst Validation RMSE: {max(val_losses):.6f} (round {val_losses.index(max(val_losses))})")
+            print(f"   Actual boosting rounds used: {len(train_losses)}")
+        elif train_losses:
+            print(f"\n📊 LightGBM Training Metrics:")
+            print(f"   Final Training RMSE: {train_losses[-1]:.6f}")
+            print(f"   Actual boosting rounds used: {len(train_losses)}")
+        
+        # Retrain on full dataset
+        # Use best iteration from model if available, otherwise use length of training history
+        best_iterations = len(train_losses) if train_losses else 1000
+        if hasattr(self.model, 'best_iteration') and self.model.best_iteration is not None:
+            best_iterations = self.model.best_iteration
+        
+        train_data_full = lgb.Dataset(X, label=y)
+        self.model = lgb.train(
+            self.best_params,
+            train_data_full,
+            num_boost_round=best_iterations,
+            callbacks=[lgb.log_evaluation(0)]
+        )
+        
+        self.training_metrics = {
+            'loss_function': 'Regression (RMSE)',
+            'iterations': best_iterations,
+            'train_history': train_losses,
+            'val_history': val_losses
+        }
     
     def predict(self, X: np.ndarray) -> np.ndarray:
         """

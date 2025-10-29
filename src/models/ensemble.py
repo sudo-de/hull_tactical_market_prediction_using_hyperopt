@@ -5,6 +5,10 @@ Ensemble model implementation combining multiple algorithms.
 import numpy as np
 from typing import List, Dict, Optional
 from sklearn.ensemble import VotingRegressor
+from .lightgbm_model import LightGBMModel
+from .xgboost_model import XGBoostModel
+from .elastic_net import ElasticNetModel
+from .catboost_model import CatBoostModel
 
 
 class EnsembleModel:
@@ -88,6 +92,31 @@ class EnsembleModel:
                 importances[model_name] = {}
         
         return importances
+
+
+def create_default_ensemble(n_trials: int = 50, cv_folds: int = 5, random_state: int = 42) -> EnsembleModel:
+    """
+    Create a default ensemble with all available models.
+    
+    Args:
+        n_trials: Number of Optuna trials for hyperparameter optimization
+        cv_folds: Number of cross-validation folds
+        random_state: Random state for reproducibility
+    
+    Returns:
+        EnsembleModel instance
+    """
+    models = [
+        LightGBMModel(n_trials=n_trials, cv_folds=cv_folds, random_state=random_state),
+        XGBoostModel(n_trials=n_trials, cv_folds=cv_folds, random_state=random_state),
+        CatBoostModel(n_trials=n_trials, cv_folds=cv_folds, random_state=random_state),
+        ElasticNetModel(cv_folds=cv_folds, random_state=random_state)
+    ]
+    
+    # Equal weights for all models
+    weights = [0.25] * len(models)
+    
+    return EnsembleModel(models=models, weights=weights)
 
 
 class StackingEnsemble:
