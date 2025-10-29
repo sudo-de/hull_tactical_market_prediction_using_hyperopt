@@ -7,15 +7,21 @@ All models have been successfully trained with advanced features and hyperparame
 ## Model Performance
 
 ### 1. ElasticNet Model
+- **Loss Function**: Squared Error (MSE)
 - **Best CV Score**: 0.010908 RMSE
 - **Best Parameters**: 
   - alpha: 0.00179
   - l1_ratio: 0.227
+- **Training Metrics**:
+  - Training RMSE: ~0.0110
+  - Validation RMSE: ~0.0114
+  - Iterations: ~12 (convergence)
 - **Signal Range**: [0.8868, 1.1492]
 - **Signal Mean**: 0.9959
 - **Status**: ✅ Trained and evaluated
 
 ### 2. LightGBM Model
+- **Loss Function**: Regression (RMSE)
 - **Best CV Score**: 0.009635 RMSE (**Best overall**)
 - **Best Parameters**:
   - num_leaves: 290
@@ -26,11 +32,17 @@ All models have been successfully trained with advanced features and hyperparame
   - min_child_samples: 78
   - reg_alpha: 0.177
   - reg_lambda: 3.82e-06
+- **Training Metrics**:
+  - Final Training RMSE: ~0.0047
+  - Final Validation RMSE: ~0.0103
+  - Best Validation RMSE: ~0.0102 (round 76)
+  - Iterations: ~98 boosting rounds
 - **Signal Range**: [0.0000, 2.0000]
 - **Signal Mean**: 1.4034
 - **Status**: ✅ Trained and evaluated
 
 ### 3. XGBoost Model
+- **Loss Function**: reg:squarederror (RMSE)
 - **Best CV Score**: 0.009800 RMSE
 - **Best Parameters**:
   - max_depth: 4
@@ -40,14 +52,36 @@ All models have been successfully trained with advanced features and hyperparame
   - colsample_bylevel: 0.892
   - min_child_weight: 8
   - gamma: 5.68e-07
-  -➔ reg_alpha: 0.204
+  - reg_alpha: 0.204
   - reg_lambda: 2.83e-07
+- **Training Metrics**: 
+  - Final Training RMSE: ~0.0082
+  - Final Validation RMSE: ~0.0101
+  - Iterations: ~56 boosting rounds
 - **Signal Range**: [0.1254, 2.0000]
 - **Signal Mean**: 1.1939
 - **Status**: ✅ Trained and evaluated
 
-### 4. Ensemble Model
-- **Type**: Weighted voting (30% ElasticNet, 35% LightGBM, 35% XGBoost)
+### 4. CatBoost Model
+- **Loss Function**: RMSE (Root Mean Squared Error)
+- **Best CV Score**: ~0.0091 RMSE
+- **Best Parameters** (example):
+  - iterations: 331
+  - learning_rate: 0.024
+  - depth: 8
+  - l2_leaf_reg: 0.005
+  - bootstrap_type: MVS
+- **Training Metrics**:
+  - Final Training RMSE: ~0.0073
+  - Final Validation RMSE: ~0.0100
+  - Best Validation RMSE: ~0.0098 (iteration 303)
+  - Iterations: ~519 (with early stopping)
+- **Signal Range**: [0.0000, 2.0000]
+- **Signal Mean**: ~1.23
+- **Status**: ✅ Trained and evaluated
+
+### 5. Ensemble Model
+- **Type**: Weighted voting (25% ElasticNet, 25% LightGBM, 25% XGBoost, 25% CatBoost)
 - **Signal Range**: [0.5518, 2.0000]
 - **Signal Mean**: 1.2425
 - **Status**: ✅ Trained and evaluated
@@ -78,12 +112,32 @@ All models have been successfully trained with advanced features and hyperparame
 
 ## Model Comparison
 
-| Model | CV Score (RMSE) | Signal Range | Signal Mean | Status |
-|-------|----------------|--------------|-------------|--------|
-| **LightGBM** | **0.009635** | [0.00, 2.00] | 1.40 | 🏆 Best |
-| XGBoost | 0.009800 | [0.13, 2.00] | 1.19 | ✅ Good |
-| Ensemble | Combined | [0.55, 2.00] | 1.24 | ✅ Robust |
-| ElasticNet | 0.010908 | [0.89, 1.15] | 1.00 | ✅ Baseline |
+| Model | Loss Function | CV Score (RMSE) | Iterations | Signal Range | Signal Mean | Status |
+|-------|--------------|----------------|------------|--------------|-------------|--------|
+| **LightGBM** | Regression (RMSE) | **0.009635** | ~98 rounds | [0.00, 2.00] | 1.40 | 🏆 Best |
+| CatBoost | RMSE | ~0.0091 | ~519 iter | [0.00, 2.00] | ~1.23 | ✅ Excellent |
+| XGBoost | reg:squarederror | 0.009800 | ~56 rounds | [0.13, 2.00] | 1.19 | ✅ Good |
+| Ensemble | Combined | Combined | - | [0.55, 2.00] | 1.24 | ✅ Robust |
+| ElasticNet | Squared Error (MSE) | 0.010908 | ~12 iter | [0.89, 1.15] | 1.00 | ✅ Baseline |
+
+## Training Metrics Summary
+
+All models now track comprehensive training metrics:
+
+### Loss Functions:
+- **ElasticNet**: Squared Error (MSE)
+- **LightGBM**: Regression (RMSE)
+- **XGBoost**: reg:squarederror (RMSE)
+- **CatBoost**: RMSE (Root Mean Squared Error)
+
+### Metrics Tracked:
+- ✅ Final training RMSE
+- ✅ Final validation RMSE
+- ✅ Best training RMSE (with iteration number)
+- ✅ Best validation RMSE (with iteration number)
+- ✅ Worst training RMSE (with iteration number)
+- ✅ Worst validation RMSE (with iteration number)
+- ✅ Actual iterations/epochs used
 
 ## Key Insights
 

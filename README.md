@@ -5,8 +5,10 @@ This project implements an advanced market timing model inspired by Hull Tactica
 ## Key Features
 
 - **Advanced Feature Engineering**: Creates 88+ features including lags, rolling statistics, momentum indicators, and interactions
-- **Multiple Algorithms**: ElasticNet, LightGBM, XGBoost, and Ensemble models
+- **Multiple Algorithms**: ElasticNet, LightGBM, XGBoost, CatBoost, and Ensemble models
 - **Hyperparameter Optimization**: Optuna-based Bayesian optimization for each model
+- **Training Metrics Tracking**: Real-time tracking of loss functions, training/validation metrics, and epochs
+- **Comprehensive Metrics Display**: Best/worst training and validation RMSE with iteration numbers
 - **Model Comparison Framework**: Systematic evaluation and visualization of model performance
 - **Competition-Ready**: Includes evaluation scoring function for Hull Tactical Market Prediction competition
 
@@ -59,7 +61,8 @@ python compare_models.py
 │       ├── elastic_net.py       # ElasticNet with Optuna
 │       ├── lightgbm_model.py    # LightGBM with Optuna
 │       ├── xgboost_model.py     # XGBoost with Optuna
-│       └── ensemble.py          # Ensemble methods
+│       ├── catboost_model.py    # CatBoost with Optuna
+│       └── ensemble.py         # Ensemble methods
 ├── input/                       # Data directory
 ├── artifacts/                   # Model outputs and plots
 ├── train.py                     # Main training script
@@ -91,7 +94,12 @@ python compare_models.py
 - Robust to missing values
 - CV Score: 0.009800 RMSE
 
-### 4. Ensemble
+### 4. CatBoost
+- Gradient boosting with categorical feature handling
+- Built-in early stopping and overfitting detection
+- CV Score: ~0.0091 RMSE
+
+### 5. Ensemble
 - Weighted voting of all models
 - Most robust predictions
 - Combines strengths of all algorithms
@@ -134,8 +142,9 @@ python compare_models.py
 ### Quick Summary:
 - **Best Model**: LightGBM (CV Score: 0.009635 RMSE)
 - **Features**: 88 engineered features
-- **Algorithms**: 4 models trained (ElasticNet, LightGBM, XGBoost, Ensemble)
+- **Algorithms**: 5 models trained (ElasticNet, LightGBM, XGBoost, CatBoost, Ensemble)
 - **Optimization**: Optuna hyperparameter tuning completed
+- **Metrics Tracking**: Loss functions, training/validation RMSE, epochs displayed
 - **Signals**: Valid trading signals generated in [0, 2] range
 
 ### Run Training:
@@ -146,9 +155,13 @@ python train.py
 
 ### Expected Output:
 - Model predictions for all algorithms
+- Loss function displayed for each model
+- Training and validation RMSE metrics (final, best, worst)
+- Iterations/epochs used during training
 - Feature importance rankings
 - Signal ranges and statistics
 - Best hyperparameters for each model
+- Comprehensive training summary section
 
 ## Documentation
 

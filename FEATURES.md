@@ -78,7 +78,31 @@ features = select_features(df, method='all')  # 'all', 'basic', or 'extended'
 - colsample_bytree, colsample_bylevel
 - min_child_weight, gamma, reg_alpha, reg_lambda
 
-### 2.4 Ensemble Model
+### 2.4 CatBoost Model
+**Location:** `src/models/catboost_model.py`
+- Gradient boosting optimized for categorical features
+- Built-in early stopping and overfitting detection
+- Robust handling of categorical variables
+- Automatic handling of missing values
+
+**Loss Function:** RMSE (Root Mean Squared Error)
+
+**Hyperparameters tuned:**
+- iterations: [100, 2000]
+- learning_rate: [0.01, 0.3]
+- depth: [4, 10]
+- l2_leaf_reg: [1e-8, 10.0]
+- bootstrap_type: ['Bayesian', 'Bernoulli', 'MVS']
+- random_strength: [1e-8, 10.0]
+- od_type: ['IncToDec', 'Iter']
+- od_wait: [10, 50]
+
+**Training Metrics Tracking:**
+- Real-time training and validation RMSE
+- Best/worst metrics with iteration numbers
+- Early stopping with best iteration selection
+
+### 2.5 Ensemble Model
 **Location:** `src/models/ensemble.py`
 
 #### Simple Voting Ensemble:
@@ -161,10 +185,16 @@ python compare_models.py
 ### Features:
 1. **Data Loading**: Loads and preprocesses train/test data
 2. **Feature Engineering**: Creates advanced features automatically
-3. **Model Training**: Trains ElasticNet, LightGBM, XGBoost, and Ensemble
+3. **Model Training**: Trains ElasticNet, LightGBM, XGBoost, CatBoost, and Ensemble
 4. **Hyperparameter Optimization**: Uses Optuna for each model
-5. **Evaluation**: Calculates metrics and signal ranges
-6. **Feature Importance**: Shows top important features
+5. **Metrics Tracking**: 
+   - Loss function display for each model
+   - Training and validation RMSE tracking
+   - Best/worst metrics with iteration numbers
+   - Epochs/iterations display
+6. **Evaluation**: Calculates metrics and signal ranges
+7. **Feature Importance**: Shows top important features
+8. **Training Summary**: Comprehensive summary of all metrics
 
 ### Workflow:
 
@@ -179,6 +209,7 @@ Train Models (with Optuna):
   - ElasticNet
   - LightGBM
   - XGBoost
+  - CatBoost
   - Ensemble
     ↓
 Generate Predictions
@@ -204,6 +235,7 @@ python train.py
 │       ├── elastic_net.py    # ElasticNet implementation
 │       ├── lightgbm_model.py # LightGBM implementation
 │       ├── xgboost_model.py  # XGBoost implementation
+│       ├── catboost_model.py # CatBoost implementation
 │       └── ensemble.py       # Ensemble methods
 ├── train.py                  # Main training script
 ├── compare_models.py         # Model comparison
@@ -220,8 +252,16 @@ python train.py
 
 ### 7.2 Multiple Algorithms
 - Different models capture different patterns
+- 5 algorithms (ElasticNet, LightGBM, XGBoost, CatBoost, Ensemble)
 - Ensemble reduces risk of poor performance
 - Opportunity to compare and select best model
+
+### 7.5 Training Metrics & Monitoring
+- Real-time loss function tracking
+- Training and validation metrics displayed
+- Best/worst performance metrics identified
+- Iteration/epoch tracking with early stopping
+- Comprehensive training summary for all models
 
 ### 7.3 Hyperparameter Tuning
 - Optimizes model performance
@@ -237,8 +277,9 @@ python train.py
 
 With these implementations:
 - **Feature Engineering**: Increases features from 13 to 88+
-- **Model Variety**: 4 different modeling approaches
+- **Model Variety**: 5 different modeling approaches (including CatBoost)
 - **Optimization**: Each model tuned individually
+- **Metrics Tracking**: Comprehensive training/validation metrics for all models
 - **Ensemble**: Combines best aspects of all models
 
 Expected improvements:
@@ -266,6 +307,3 @@ Adjust these based on:
 - Available computational resources
 - Time constraints
 - Desired optimization depth
-
-巨头。
-

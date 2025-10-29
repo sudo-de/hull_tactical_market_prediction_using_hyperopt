@@ -67,25 +67,28 @@
 ┌─────────────────────────────────────────────────────────────────┐
 │                      MODEL TRAINING LAYER                         │
 │                                                                   │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐         │
-│  │  ElasticNet  │  │  LightGBM    │  │  XGBoost     │         │
-│  │  ──────────  │  │  ──────────  │  │  ──────────  │         │
-│  │  src/models/ │  │  src/models/ │  │  src/models/ │         │
-│  │  elastic_net.│  │  lightgbm_   │  │  xgboost_    │         │
-│  │  py          │  │  model.py    │  │  model.py    │         │
-│  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘         │
-│         │                  │                  │                │
-│         └──────────────────┼──────────────────┘                │
-│                            ▼                                     │
-│                  ┌─────────────────────┐                          │
-│                  │   Ensemble Model    │                          │
-│                  │   src/models/       │                          │
-│                  │   ensemble.py       │                          │
-│                  │                     │                          │
-│                  │  • Voting Ensemble │                          │
-│                  │  • Weighted Average │                          │
-│                  │  • Stacking         │                          │
-│                  └─────────────────────┘                          │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐         │
+│  │  ElasticNet  │  │  LightGBM    │  │  XGBoost     │  │  CatBoost    │         │
+│  │  ──────────  │  │  ──────────  │  │  ──────────  │  │  ──────────  │         │
+│  │  src/models/ │  │  src/models/ │  │  src/models/ │  │  src/models/ │         │
+│  │  elastic_net.│  │  lightgbm_   │  │  xgboost_    │  │  catboost_   │         │
+│  │  py          │  │  model.py    │  │  model.py    │  │  model.py    │         │
+│  │              │  │              │  │              │  │              │         │
+│  │  Loss: MSE   │  │  Loss: RMSE  │  │  Loss: RMSE  │  │  Loss: RMSE  │         │
+│  │  Metrics: ✓  │  │  Metrics: ✓  │  │  Metrics: ✓  │  │  Metrics: ✓  │         │
+│  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘         │
+│         │                  │                  │                  │                │
+│         └──────────────────┼──────────────────┼──────────────────┘                │
+│                            ▼                                                     │
+│                  ┌─────────────────────┐                                          │
+│                  │   Ensemble Model    │                                          │
+│                  │   src/models/       │                                          │
+│                  │   ensemble.py       │                                          │
+│                  │                     │                                          │
+│                  │  • Voting Ensemble │                                          │
+│                  │  • Weighted Average │                                          │
+│                  │  • Stacking         │                                          │
+│                  └─────────────────────┘                                          │
 └────────┬────────────────────────────────────────────────────────┘
          │
          ▼
@@ -102,14 +105,14 @@
 │  │  • Best parameter selection                              │   │
 │  │                                                           │   │
 │  │  Search Spaces:                                          │   │
-│  │  ┌─────────────┐  ┌──────────────┐  ┌─────────────┐     │   │
-│  │  │ ElasticNet   │  │  LightGBM    │  │  XGBoost    │     │   │
-│  │  │ • alpha      │  │ • leaves     │  │ • depth     │     │   │
-│  │  │ • l1_ratio   │  │ • lr         │  │ • lr        │     │   │
-│  │  └─────────────┘  │ • features   │  │ • subsample │     │   │
-│  │                    │ • bagging    │  │ • gamma     │     │   │
-│  │                    │ • lambda     │  │ • lambda    │     │   │
-│  │                    └──────────────┘  └─────────────┘     │   │
+│  │  ┌─────────────┐  ┌──────────────┐  ┌─────────────┐  ┌─────────────┐     │   │
+│  │  │ ElasticNet   │  │  LightGBM    │  │  XGBoost    │  │  CatBoost   │     │   │
+│  │  │ • alpha      │  │ • leaves     │  │ • depth     │  │ • iterations│     │   │
+│  │  │ • l1_ratio   │  │ • lr         │  │ • lr        │  │ • lr        │     │   │
+│  │  └─────────────┘  │ • features   │  │ • subsample │  │ • depth     │     │   │
+│  │                    │ • bagging    │  │ • gamma     │  │ • bootstrap │     │
+│  │                    │ • lambda     │  │ • lambda    │  │ • od_type   │     │   │
+│  │                    └──────────────┘  └─────────────┘  └─────────────┘     │   │
 │  └─────────────────────────────────────────────────────────┘   │
 └────────┬────────────────────────────────────────────────────────┘
          │
@@ -117,8 +120,14 @@
 ┌─────────────────────────────────────────────────────────────────┐
 │                    MODEL EVALUATION LAYER                       │
 │  ┌─────────────────────────────────────────────────────────┐    │
-│  │  compare_models.py                                      │    │
+│  │  compare_models.py & train.py                           │    │
 │  │  ─────────────────────────────────────                  │    │
+│  │                                                         │    │
+│  │  • Training Metrics Tracking                           │    │
+│  │    - Loss function display                             │    │
+│  │    - Training/validation RMSE                          │    │
+│  │    - Best/worst metrics with iterations                 │    │
+│  │    - Epochs/iterations display                         │    │
 │  │                                                         │    │
 │  │  • calculate_metrics()                                  │    │
 │  │    - RMSE (Root Mean Squared Error)                     │    │
@@ -130,6 +139,10 @@
 │  │                                                         │    │
 │  │  • plot_feature_importance()                            │    │
 │  │    - Top N features visualization                       │    │
+│  │                                                         │    │
+│  │  • Training Summary                                     │    │
+│  │    - Comprehensive metrics for all models               │    │
+│  │    - Loss functions, iterations, metrics               │    │
 │  │                                                         │    │
 │  │  • evaluate_model()                                     │    │
 │  │    - Signal conversion                                  │    │
@@ -201,9 +214,10 @@
        ▼
 ┌─────────────────────────────────────────┐
 │  Model Training                          │
-│  • ElasticNet                            │
-│  • LightGBM ✅ Best                      │
-│  • XGBoost                               │
+│  • ElasticNet (Loss: MSE, Metrics: ✓)    │
+│  • LightGBM ✅ Best (Loss: RMSE, Metrics: ✓)│
+│  • XGBoost (Loss: RMSE, Metrics: ✓)      │
+│  • CatBoost (Loss: RMSE, Metrics: ✓)     │
 │  • Ensemble                              │
 └──────┬──────────────────────────────────┘
        │
@@ -301,11 +315,47 @@
 │  • reg_alpha: [1e-8, 10]               │
 │  • reg_lambda: [1e-8, 10]              │
 │                                         │
+│  Loss Function: reg:squarederror (RMSE)│
+│  Training Metrics: ✓                   │
 │  Best Score: 0.009800 RMSE             │
 └─────────────────────────────────────────┘
 ```
 
-### 4. Ensemble Model
+### 4. CatBoost Model
+```
+┌─────────────────────────────────────────┐
+│        CatBoost Architecture            │
+├─────────────────────────────────────────┤
+│  Algorithm: Gradient Boosting          │
+│  ─────────────────────────────────────  │
+│                                         │
+│  Input: X (88 features)                 │
+│         └─► Categorical feature handling│
+│         └─► Ordered boosting            │
+│         └─► Early stopping               │
+│                                         │
+│  Loss Function: RMSE                    │
+│                                         │
+│  Hyperparameters (Optuna):             │
+│  • iterations: [100, 2000]            │
+│  • learning_rate: [0.01, 0.3]          │
+│  • depth: [4, 10]                      │
+│  • l2_leaf_reg: [1e-8, 10.0]           │
+│  • bootstrap_type: [Bayesian, Bernoulli, MVS]│
+│  • random_strength: [1e-8, 10.0]        │
+│  • od_type: [IncToDec, Iter]            │
+│  • od_wait: [10, 50]                    │
+│                                         │
+│  Training Metrics: ✓                    │
+│  • Real-time train/val RMSE             │
+│  • Best/worst metrics tracking          │
+│  • Early stopping detection             │
+│                                         │
+│  Best Score: ~0.0091 RMSE               │
+└─────────────────────────────────────────┘
+```
+
+### 5. Ensemble Model
 ```
 ┌─────────────────────────────────────────┐
 │       Ensemble Architecture             │
@@ -316,9 +366,10 @@
 │  Input: Individual model predictions   │
 │                                         │
 │  Models & Weights:                     │
-│  • ElasticNet: 30% weight              │
-│  • LightGBM: 35% weight                │
-│  • XGBoost: 35% weight                 │
+│  • ElasticNet: 25% weight              │
+│  • LightGBM: 25% weight                │
+│  • XGBoost: 25% weight                 │
+│  • CatBoost: 25% weight                │
 │                                         │
 │  Output:                               │
 │  Σ (prediction_i × weight_i)            │

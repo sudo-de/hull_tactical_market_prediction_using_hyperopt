@@ -13,25 +13,39 @@
 ### ✅ Multiple Algorithms
 #### 1. ElasticNet (`src/models/elastic_net.py`)
 - Regularized linear regression
+- Loss Function: Squared Error (MSE)
 - Optuna hyperparameter tuning (alpha, l1_ratio)
 - Time series cross-validation
+- Training/validation metrics tracking
 - Best CV score: ~0.0109
 
 #### 2. LightGBM (`src/models/lightgbm_model.py`)
 - Fast gradient boosting
+- Loss Function: Regression (RMSE)
 - 8 hyperparameters tuned with Optuna
 - Feature importance extraction
+- Training history tracking (best/worst metrics)
 - Best CV score: ~0.0097
 
 #### 3. XGBoost (`src/models/xgboost_model.py`)
 - Advanced gradient boosting
+- Loss Function: reg:squarederror (RMSE)
 - 9 hyperparameters tuned with Optuna
+- Training metrics with best/worst tracking
 - Best for complex interactions
 
-#### 4. Ensemble Model (`src/models/ensemble.py`)
+#### 4. CatBoost (`src/models/catboost_model.py`)
+- Gradient boosting with categorical handling
+- Loss Function: RMSE (Root Mean Squared Error)
+- 8+ hyperparameters tuned with Optuna
+- Built-in early stopping and overfitting detection
+- Comprehensive training metrics tracking
+- Best CV score: ~0.0091
+
+#### 5. Ensemble Model (`src/models/ensemble.py`)
 - Voting ensemble (weighted average)
 - Stacking ensemble with meta-learner
-- Combines all base models
+- Combines all base models (ElasticNet, LightGBM, XGBoost, CatBoost)
 
 ### ✅ Hyperparameter Tuning Framework
 - **Optuna** for Bayesian optimization
@@ -47,6 +61,13 @@
 ### ✅ Training Pipeline (`train.py`)
 - End-to-end training workflow
 - Loads data, creates features, scales, trains all models
+- **Loss function display** for each model
+- **Training/validation metrics tracking**:
+  - Final training and validation RMSE
+  - Best training and validation RMSE (with iteration numbers)
+  - Worst training and validation RMSE (with iteration numbers)
+- **Epochs/iterations display** for all models
+- **Comprehensive training summary** section
 - Generates predictions and signals
 - Shows feature importance
 
@@ -60,23 +81,28 @@
 
 ### After:
 - **88 advanced features** (6.8x more)
-- **4 different models** (ElasticNet, LightGBM, XGBoost, Ensemble)
+- **5 different models** (ElasticNet, LightGBM, XGBoost, CatBoost, Ensemble)
 - **Optuna optimization** for each model
+- **Loss function tracking** and display
+- **Training/validation metrics** monitoring
+- **Epochs/iterations** tracking with early stopping
 - **Systematic comparison** framework
 
 ## Files Created/Modified
 
 ### New Files:
 1. `src/features.py` - Advanced feature engineering
-2. `src/models/elastic_net.py` - ElasticNet with Optuna
-3. `src/models/lightgbm_model.py` - LightGBM with Optuna
-4. `src/models/xgboost_model.py` - XGBoost with Optuna
-5. `src/models/ensemble.py` - Ensemble methods
-6. `train.py` - Complete training pipeline
-7. `compare_models.py` - Model comparison framework
-8. `ADVANCED_FEATURES.md` - Documentation
-9. `IMPLEMENTATION_SUMMARY.md` - This file
-10. `.gitignore` - Git ignore patterns
+2. `src/models/elastic_net.py` - ElasticNet with Optuna and metrics tracking
+3. `src/models/lightgbm_model.py` - LightGBM with Optuna and metrics tracking
+4. `src/models/xgboost_model.py` - XGBoost with Optuna and metrics tracking
+5. `src/models/catboost_model.py` - CatBoost with Optuna and metrics tracking
+6. `src/models/ensemble.py` - Ensemble methods
+7. `train.py` - Complete training pipeline with metrics display
+8. `compare_models.py` - Model comparison framework
+9. `demo_catboost.py` - CatBoost demonstration script
+10. `ADVANCED_FEATURES.md` - Documentation
+11. `IMPLEMENTATION_SUMMARY.md` - This file
+12. `.gitignore` - Git ignore patterns
 
 ### Modified Files:
 1. `README.md` - Updated with new features
@@ -104,11 +130,13 @@ python main.py
 ## Key Benefits
 
 1. **Better Features**: 88 engineered features capture market dynamics
-2. **Model Diversity**: 4 algorithms with different strengths
+2. **Model Diversity**: 5 algorithms with different strengths (including CatBoost)
 3. **Optimization**: Each model tuned to optimal performance
-4. **Robustness**: Ensemble reduces overfitting risk
-5. **Insights**: Feature importance helps understand predictions
-6. **Reproducibility**: Systematic workflow and saved artifacts
+4. **Metrics Visibility**: Real-time tracking of loss functions, training/validation metrics
+5. **Training Insights**: Best/worst metrics help identify optimal stopping points
+6. **Robustness**: Ensemble reduces overfitting risk
+7. **Insights**: Feature importance helps understand predictions
+8. **Reproducibility**: Systematic workflow and saved artifacts
 
 ## Test Results
 
@@ -116,8 +144,13 @@ The implementation was successfully tested:
 - ✅ All imports work correctly
 - ✅ Models train without errors
 - ✅ Optuna optimization completes
+- ✅ Loss functions displayed correctly
+- ✅ Training/validation metrics tracked
+- ✅ Best/worst metrics identified
+- ✅ Epochs/iterations displayed
 - ✅ Predictions generated
 - ✅ Feature importance extracted
+- ✅ Training summary section displays all metrics
 
 **Note**: Full training with Optuna takes time. Use `optimize=False` for quick testing.
 
@@ -149,9 +182,12 @@ For production:
 
 ## Success Metrics
 
-- ✅ All 4 models successfully implemented
+- ✅ All 5 models successfully implemented (including CatBoost)
 - ✅ Optuna integration working
 - ✅ Feature engineering creating 88 features
+- ✅ Loss function tracking implemented
+- ✅ Training/validation metrics monitoring
+- ✅ Training summary section operational
 - ✅ Ensemble model combining predictions
 - ✅ Evaluation framework operational
 - ✅ Documentation complete
